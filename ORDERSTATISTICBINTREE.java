@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class ORDERSTATISTICBINTREE
+public class ORDERSTATISTICBINTREE // Ordered set using Fenwick (Binary Indexed) Tree
 {
     static class bintree {
 	
