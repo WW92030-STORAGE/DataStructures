@@ -1,16 +1,4 @@
 #include <bits/stdc++.h> 
-#include <stdio.h>
-#include <math.h>
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <map>
-#include <iterator>
-#include <set>
-#include <string>
-#include <queue>
-#include <stack>
-#include <functional>
 using namespace std;
 #define ll long
 #define pii pair<ll, ll>
