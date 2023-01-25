@@ -1,4 +1,4 @@
-# SEGMENT TREE HEADER FILE AND TEMPLATE CLASS (C++)
+// SEGMENT TREE HEADER FILE AND TEMPLATE CLASS (C++)
 
 #include <iostream>
 #include <functional>
