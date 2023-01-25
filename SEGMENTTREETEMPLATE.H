@@ -102,3 +102,46 @@ template<typename T> class segtree {
         print();
         std::cout << std::endl;
     }
+
+
+/*
+
+// Example Program (https://cses.fi/problemset/task/1648)
+
+#include <iostream>
+#include <functional>
+#include <vector>
+#include "segmenttree.h"
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int operation(int a, int b) {
+    return (a < b) ? a : b;
+}
+
+int main()
+{
+    int n, q;
+    std::cin >> n >> q;
+    int arr[n];
+    for (int i = 0; i < n; i++) std::cin >> arr[i];
+    
+    segtree<int> tree(arr, n, &add, 0);
+    tree.println();
+    
+    int a, b, c;
+    for (int i = 0; i < q; i++) {
+        std::cin >> a >> b >> c;
+        if (a == 1) {
+            tree.update(b - 1, c);
+            tree.println();
+        }
+        else std::cout << tree.query(b - 1, c - 1) << std::endl;
+    }
+    
+    return 0;
+}
+
+*/
