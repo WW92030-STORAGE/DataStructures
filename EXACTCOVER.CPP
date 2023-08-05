@@ -39,6 +39,7 @@ bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>&
     
     if (cols.size() == mat[0].size()) { // If the matrix has no unused columns then return true
         if (DEBUG) cout << "SOLUTION FOUND\n";
+        disp(solution); // PRINT OUT SOLUTION
         return true;
     }
     
@@ -112,10 +113,7 @@ bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>&
     }
     
     retval = retval | search(mat, rows, cols, solution);
-    if (retval) {
-        disp(solution);
-        return retval;
-    }
+    if (retval) return retval;
     
     if (DEBUG) {
         cout << "END RECURSIVE SEARCH\n";
