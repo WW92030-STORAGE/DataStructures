@@ -1,44 +1,43 @@
-#include <bits/stdc++.h> 
-using namespace std;
-#define pii pair<int, int>
+#include <vector>
+#include <iostream>
+#include <set>
+#include <climits>
 
-using namespace std;
-
-void disp(set<int>& s) {
-    cout << "[";
-    for (auto i : s) cout << i << " ";
-    cout << "]\n";
+void disp(std::set<int>& s) {
+    std::cout << "[";
+    for (auto i : s) std::cout << i << " ";
+    std::cout << "]\n";
 }
 
-void vdisp(vector<int>& v) {
-    cout << "[";
-    for (auto i : v) cout << i << " ";
-    cout << "]\n";
+void vdisp(std::vector<int>& v) {
+    std::cout << "[";
+    for (auto i : v) std::cout << i << " ";
+    std::cout << "]\n";
 }
 
-void matdisp(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols) {
+void matdisp(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<int>& cols) {
     for (int i = 0; i < mat.size(); i++) {
         for (int j = 0; j < mat[i].size(); j++) {
-            if (rows.find(i) != rows.end()) cout << "X";
-            else if (cols.find(j) != cols.end()) cout << "X";
-            else cout << mat[i][j];
+            if (rows.find(i) != rows.end()) std::cout << "X";
+            else if (cols.find(j) != cols.end()) std::cout << "X";
+            else std::cout << mat[i][j];
         }
-        cout << endl;
+        std::cout << std::endl;
     }
 }
 
 const bool DEBUG = false;
 
-// matrix / eliminated rows / eliminated cols / temporary vector for temp use
-bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>& solution) {
+// matrix / eliminated rows / eliminated cols / temporary std::vector for temp use
+bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<int>& cols, std::set<int>& solution) {
     if (DEBUG) {
-        cout << "SEARCHING...\n";
+        std::cout << "SEARCHING...\n";
         matdisp(mat, rows, cols);
     }
     
     
     if (cols.size() == mat[0].size()) { // If the matrix has no unused columns then return true
-        if (DEBUG) cout << "SOLUTION FOUND\n";
+        if (DEBUG) std::cout << "SOLUTION FOUND\n";
         disp(solution); // PRINT OUT SOLUTION
         return true;
     }
@@ -62,13 +61,13 @@ bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>&
     }
     
     if (col < 0) { // No nonzero column
-        if (DEBUG) cout << "BAD BAD BAD\n";
+        if (DEBUG) std::cout << "BAD BAD BAD\n";
         return false;
     }
     
-    if (DEBUG) cout << "COLUMN " << col << endl;
+    if (DEBUG) std::cout << "COLUMN " << col << std::endl;
     
-    vector<int> temp;
+    std::vector<int> temp;
     
     for (int i = 0; i < mat.size(); i++) {
         if (rows.find(i) != rows.end()) continue; // do not use deleted rows
@@ -76,19 +75,19 @@ bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>&
     }
     
     if (DEBUG) {
-        cout << "CHOICES IN COLUMN - ";
-        for (auto i : temp) cout << i << " ";
-        cout << endl;
+        std::cout << "CHOICES IN COLUMN - ";
+        for (auto i : temp) std::cout << i << " ";
+        std::cout << std::endl;
     }
     
-    set<int> ar;
-    set<int> ac;
+    std::set<int> ar;
+    std::set<int> ac;
     
     bool retval = false;
     
     for (auto row : temp) {
         
-    if (DEBUG) cout << "ROW " << row << endl;
+    if (DEBUG) std::cout << "ROW " << row << std::endl;
     
     solution.insert(row);
     
@@ -106,9 +105,9 @@ bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>&
     }
     
     if (DEBUG) {
-        cout << "ROWS ";
+        std::cout << "ROWS ";
         disp(rows);
-        cout << "COLS ";
+        std::cout << "COLS ";
         disp(cols);
     }
     
@@ -116,10 +115,10 @@ bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>&
     if (retval) return retval;
     
     if (DEBUG) {
-        cout << "END RECURSIVE SEARCH\n";
-        cout << "ADDING BACK ROWS ";
+        std::cout << "END RECURSIVE SEARCH\n";
+        std::cout << "ADDING BACK ROWS ";
         disp(ar);
-        cout << "ADDING BACK COLS ";
+        std::cout << "ADDING BACK COLS ";
         disp(ac);
         disp(rows);
         disp(cols);
@@ -146,7 +145,7 @@ bool search(vector<vector<bool>>& mat, set<int>& rows, set<int>& cols, set<int>&
 
 int main()
 {
-    vector<vector<bool>> mat(6, vector<bool>(7, false)); // Example from GeeksForGeeks
+    std::vector<std::vector<bool>> mat(6, std::vector<bool>(7, false)); // Example from GeeksForGeeks
     mat[0][0] = mat[0][3] = mat[0][6] = true;
     mat[1][0] = mat[1][3] = true;
     mat[2][3] = mat[2][4] = mat[2][6] = true;
@@ -154,16 +153,13 @@ int main()
     mat[4][1] = mat[4][2] = mat[4][5] = mat[4][6] = true;
     mat[5][1] = mat[5][6] = true;
     
-    
-    srand(time(0));
-    
-    set<int> r;
-    set<int> c;
-    set<int> solution;
+    std::set<int> r;
+    std::set<int> c;
+    std::set<int> solution;
     
     matdisp(mat, r, c);
     
-    cout << search(mat, r, c, solution); // rows 1 3 5
+    std::cout << search(mat, r, c, solution); // rows 1 3 5
 
     return 0;
 }
