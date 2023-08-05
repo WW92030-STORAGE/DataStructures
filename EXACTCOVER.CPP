@@ -28,14 +28,13 @@ void matdisp(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<
 
 const bool DEBUG = false;
 
-// matrix / eliminated rows / eliminated cols / temporary std::vector for temp use
+// matrix / eliminated rows / eliminated cols / solution set (for external use)
 bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<int>& cols, std::set<int>& solution) {
     // std::cout << "SEARCHING...\n";
     // matdisp(mat, rows, cols);
     
     
     if (cols.size() == mat[0].size()) { // If the matrix has no unused columns then return true
-        // std::cout << "SOLUTION FOUND\n";
         disp(solution); // PRINT OUT SOLUTION
         return true;
     }
