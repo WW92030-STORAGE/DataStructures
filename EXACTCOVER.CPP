@@ -30,14 +30,12 @@ const bool DEBUG = false;
 
 // matrix / eliminated rows / eliminated cols / temporary std::vector for temp use
 bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<int>& cols, std::set<int>& solution) {
-    if (DEBUG) {
-        std::cout << "SEARCHING...\n";
-        matdisp(mat, rows, cols);
-    }
+    // std::cout << "SEARCHING...\n";
+    // matdisp(mat, rows, cols);
     
     
     if (cols.size() == mat[0].size()) { // If the matrix has no unused columns then return true
-        if (DEBUG) std::cout << "SOLUTION FOUND\n";
+        // std::cout << "SOLUTION FOUND\n";
         disp(solution); // PRINT OUT SOLUTION
         return true;
     }
@@ -61,11 +59,11 @@ bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<i
     }
     
     if (col < 0) { // No nonzero column
-        if (DEBUG) std::cout << "BAD BAD BAD\n";
+        // std::cout << "BAD BAD BAD\n";
         return false;
     }
     
-    if (DEBUG) std::cout << "COLUMN " << col << std::endl;
+    // std::cout << "COLUMN " << col << std::endl;
     
     std::vector<int> temp;
     
@@ -74,11 +72,9 @@ bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<i
         if (mat[i][col]) temp.push_back(i);
     }
     
-    if (DEBUG) {
-        std::cout << "CHOICES IN COLUMN - ";
-        for (auto i : temp) std::cout << i << " ";
-        std::cout << std::endl;
-    }
+    // std::cout << "CHOICES IN COLUMN - ";
+    // for (auto i : temp) std::cout << i << " ";
+    // std::cout << std::endl;
     
     std::set<int> ar;
     std::set<int> ac;
@@ -87,7 +83,7 @@ bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<i
     
     for (auto row : temp) {
         
-    if (DEBUG) std::cout << "ROW " << row << std::endl;
+    // std::cout << "ROW " << row << std::endl;
     
     solution.insert(row);
     
@@ -104,25 +100,24 @@ bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<i
         ac.insert(c);
     }
     
-    if (DEBUG) {
-        std::cout << "ROWS ";
-        disp(rows);
-        std::cout << "COLS ";
-        disp(cols);
-    }
+    // std::cout << "ROWS ";
+    // disp(rows);
+    // std::cout << "COLS ";
+    // disp(cols);
     
     retval = retval | search(mat, rows, cols, solution);
     if (retval) return retval;
     
-    if (DEBUG) {
-        std::cout << "END RECURSIVE SEARCH\n";
-        std::cout << "ADDING BACK ROWS ";
-        disp(ar);
-        std::cout << "ADDING BACK COLS ";
-        disp(ac);
-        disp(rows);
-        disp(cols);
-    }
+    /*
+    std::cout << "END RECURSIVE SEARCH\n";
+    std::cout << "ADDING BACK ROWS ";
+    disp(ar);
+    std::cout << "ADDING BACK COLS ";
+    disp(ac);
+    disp(rows);
+    disp(cols);
+    */
+    
     
     for (auto r : ar) {
         if (rows.find(r) != rows.end()) rows.erase(rows.find(r));
@@ -133,10 +128,8 @@ bool search(std::vector<std::vector<bool>>& mat, std::set<int>& rows, std::set<i
     
     solution.erase(row);
     
-    if (DEBUG) {
-        disp(rows);
-        disp(cols);
-    }
+    // disp(rows);
+    // disp(cols);
     
     }
     
