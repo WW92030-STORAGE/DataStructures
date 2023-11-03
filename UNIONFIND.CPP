@@ -40,6 +40,7 @@ class DSU {
         
         a = root(a);
         b = root(b);
+        if (a == b) return;
         if (size[a] < size[b]) swap(a, b);
         size[a] += size[b];
         parent[b] = a;
