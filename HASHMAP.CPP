@@ -93,6 +93,12 @@ class HashMap {
         Node<K, V>* node = buckets[position];
         while (node != nullptr) {
             if (node->key == k) {
+                if (node->prev == nullptr) {
+                    if (node->next != nullptr) node->next->prev = nullptr;
+                    buckets[position] = node->next;
+                    delete node;
+                    return true;
+                }
                 if (node->prev != nullptr) node->prev->next = node->next;
                 if (node->next != nullptr) node->next->prev = node->prev;
                 delete node;
@@ -110,23 +116,25 @@ using namespace std;
 int main()
 {    
     HashMap<int, int> hm;
-    for (int i = 0; i < 10000; i++) {
-        hm.put(i, 4 * i);
+    int N = 300000;
+    
+    for (int i = 0; i < N; i++) {
+        hm.put(i, 100 * i);
     }
     
     long res = 0;
     
-    int N = 10000;
     
-    for (int i = 0; i < 10000; i++) res += hm.get(i);
-    cout << res / 4 << endl;
     
-    for (int i = 0; i < 10000; i++) {
-        if (i % 2) continue;
+    for (int i = 0; i < N; i++) res += hm.get(i);
+    cout << res / 100 << endl;
+    
+    for (int i = 0; i < N; i++) {
+        if (i % 100 == 0) continue;
         hm.remove(i);
     }
     
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < N; i++) {
         if (hm.containsKey(i)) cout << hm.get(i) << " ";
     }
     
