@@ -50,6 +50,7 @@ class HashMap {
             if (node->next == nullptr) break;
             node = node->next;
         }
+        node = buckets[position];
         Node<K, V>* newnode = new Node<K, V>(k, v);
         newnode->next = node;
         if (node != nullptr) node->prev = newnode;
