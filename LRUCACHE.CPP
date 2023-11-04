@@ -110,8 +110,6 @@ class HashMap {
     }
 };
 
-#include <iostream>
-
 template <typename K, typename V>
 class LRUCache {
     public:
