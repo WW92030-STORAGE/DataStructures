@@ -7,8 +7,6 @@ class Node {
     Node* next;
     
     Node() {
-        key = 0;
-        val = 0;
         prev = nullptr;
         next = nullptr;
     }
@@ -32,7 +30,7 @@ class HashMap {
     }
     
     unsigned long xhash(K key) {
-        unsigned long res = (unsigned long)(reinterpret_cast<int>(key));
+        unsigned long res = (unsigned long)(reinterpret_cast<unsigned long&>(key));
         res = (82589933 * res) + 290832;
         
         return res % HASHES;
@@ -141,3 +139,5 @@ int main()
 
     return 0;
 }
+
+
