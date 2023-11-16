@@ -55,6 +55,7 @@ class StringHash { // Calculates hashes on strings for a fixed radix and modulus
     }
     
     int64_t subhash(vector<int64_t>& v, int a, int b) { // S[a ... b]
+        if (a == 0) return v[b];
         int64_t res = v[b];
         int64_t subscale = v[a - 1] * pow(b - a + 1);
         subscale %= mod;
@@ -72,3 +73,10 @@ int main()
     cout << hash.subhash(v, 3, 8) << " " << v2[5] << endl;
     return 0;
 }
+
+
+
+
+
+
+
