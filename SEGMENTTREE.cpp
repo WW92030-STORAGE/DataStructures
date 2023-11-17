@@ -1,6 +1,6 @@
 #include <bits/stdc++.h> 
 using namespace std;
-#define ll long
+#define ll int64_t
 #define pii pair<ll, ll>
 #define pb push_back
 
