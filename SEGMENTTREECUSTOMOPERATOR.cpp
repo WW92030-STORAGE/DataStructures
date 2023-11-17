@@ -1,6 +1,6 @@
 #include <bits/stdc++.h> 
 using namespace std;
-#define ll long
+#define ll int64_t
 #define pii pair<ll, ll>
 #define pb push_back
 
@@ -28,16 +28,15 @@ class segtree {
         return op(a, b);
     }
     
-    segtree(ll ray[], ll x, function<ll(ll, ll)> func, ll id) {
+    segtree(vector<ll>& ray, function<ll(ll, ll)> func, ll id) {
         op = func;
         identity = id;
-        n = x;
+        n = ray.size();
         size = ceillog(n);
         for (ll i = 0; i < size; i++) arr.pb(0);
         for (ll i = 0; i < 2 * size; i++) tree.pb(0);
         
-        for (int i = 0; i < n; i++) arr[i] = ray[i];
-	for (int i = 0; i < n; i++) change(i, arr[i]);
+        for (int i = 0; i < n; i++) update(i, ray[i]);
     }
     
     ll query(ll a, ll b) {
@@ -94,14 +93,14 @@ ll operation(ll a, ll b) {
     return (a < b) ? a : b;
 }
 
-int main() // https://cses.fi/problemset/task/1649
+int main()
 {
     ll n, q;
     cin >> n >> q;
-    ll arr[n];
+    vector<ll> arr(n);
     for (ll i = 0; i < n; i++) cin >> arr[i];
     
-    segtree tree(arr, n, &operation, LLONG_MAX);
+    segtree tree(arr, &operation, LLONG_MAX);
 //    tree.println();
     
     ll c, a, b;
@@ -116,6 +115,3 @@ int main() // https://cses.fi/problemset/task/1649
     
     return 0;
 }
-
-
-
