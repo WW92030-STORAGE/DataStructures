@@ -27,13 +27,13 @@ class segtree {
         return b;
     }
     
-    segtree(ll ray[], ll x) {
-        n = x;
+    segtree(vector<ll>& ray) {
+        n = ray.size();
         size = ceillog(n);
         for (ll i = 0; i < size; i++) arr.pb(0);
         for (ll i = 0; i < 2 * size; i++) tree.pb(0);
         
-	for (int i = 0; i < n; i++) update(i, arr[i]);
+	    for (ll i = 0; i < n; i++) update(i, ray[i]);
     }
     
     ll query(ll a, ll b) {
@@ -86,10 +86,10 @@ int main() // https://cses.fi/problemset/task/1649/
 {
     ll n, q;
     cin >> n >> q;
-    ll arr[n];
+    vector<ll> arr(n, 0);
     for (ll i = 0; i < n; i++) cin >> arr[i];
     
-    segtree tree(arr, n);
+    segtree tree(arr);
 //    tree.println();
     
     ll c, a, b;
