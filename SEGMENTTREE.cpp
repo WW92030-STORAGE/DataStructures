@@ -33,8 +33,7 @@ class segtree {
         for (ll i = 0; i < size; i++) arr.pb(0);
         for (ll i = 0; i < 2 * size; i++) tree.pb(0);
         
-        for (int i = 0; i < n; i++) arr[i] = ray[i];
-	for (int i = 0; i < n; i++) change(i, arr[i]);
+	for (int i = 0; i < n; i++) update(i, arr[i]);
     }
     
     ll query(ll a, ll b) {
