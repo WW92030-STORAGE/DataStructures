@@ -48,11 +48,7 @@ template<typename T> class segtree {
         for (int i = 0; i < 2 * size; i++) tree.push_back(0);
         
         for (int i = 0; i < n; i++) arr[i] = ray[i];
-		for (int i = size; i < 2 * size; i++) tree[i] = arr[i - size]; // range length 1
-		
-		for (int i = size - 1; i > 0; i--) {
-		    tree[i] = combine(tree[2 * i], tree[2 * i + 1]);
-		}
+	for (int i = 0; i < n; i++) change(i, arr[i]);
     }
     
     template <typename T> T segtree<T>::query(int a, int b) {
