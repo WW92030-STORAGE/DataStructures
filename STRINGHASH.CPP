@@ -65,18 +65,34 @@ class StringHash { // Calculates hashes on strings for a fixed radix and modulus
     }
 };
 
-int main()
+
+
+int main() // https://www.cses.fi/problemset/task/1753/
 {
-    StringHash hash;
-    auto v = hash.phash("THISISASTRING!");
-    auto v2 = hash.phash("SISAST");
-    cout << hash.subhash(v, 3, 8) << " " << v2[5] << endl;
+    StringHash h1; // Construct the radix hashing system using two different radices
+    StringHash h2(62);
+    
+    string s, p;
+    cin >> s >> p;
+    
+    int sn = s.length();
+    int pn = p.length();
+    
+    auto s1 = h1.phash(s);
+    auto s2 = h2.phash(s);
+    
+    auto p1 = h1.phash(p);
+    auto p2 = h2.phash(p);
+    
+    int res = 0;
+    
+    for (int i = 0; i <= sn - pn; i++) {
+        if (p1[pn - 1] != h1.subhash(s1, i, i + pn - 1)) continue;
+        if (p2[pn - 1] != h2.subhash(s2, i, i + pn - 1)) continue;
+        res++;
+    }
+    
+    cout << res << endl;
+    
     return 0;
 }
-
-
-
-
-
-
-
