@@ -8,7 +8,7 @@ class StringHash { // Calculates hashes on strings for a fixed radix and modulus
     public:
     int64_t mod;
     int64_t radix;
-    map<int64_t, int64_t> powers;
+    unordered_map<int64_t, int64_t> powers;
     
     StringHash() {
         mod = 1000000007;
