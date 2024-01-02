@@ -48,7 +48,7 @@ std::vector<std::complex<double>> FFTUtil(std::vector<std::complex<double>>& v) 
 // The purpose of this function is to recover the original polynomial v = v[0] + v[1]x + v[2]x^2 + ... 
 // From the FFT res[x] = P(root[x]) (root[x] = exp(i * x * 2pi / n))
 // It can be realized that if v is the polynomial we seek
-// then v[x] = (1 / n) res(root[2n - x])
+// then v[x] = (1 / n) res(root[n - x])
 // We can simply call FFT on the FFT vector again and manipulate the resulting values into the coefficient array
 // It's not as simple as a reverse and pointwise divide
 // This function takes in an FFT vector of power of 2 size
