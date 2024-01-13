@@ -284,11 +284,11 @@ class RBTree {
 
 
 int main() {
-    RBTree<int> tree;
-    for (int i = 0; i < 64; i++) tree.insert(i);
-    tree.disp();
+    RBTree<int> protogen;
+    for (int i = 0; i < 64; i++) protogen.insert(i);
+    protogen.disp();
     std::cout << "\n";
-    for (int i = 2; i < 64; i += 4) tree.erase(i);
-    tree.disp();
+    for (int i = 2; i < 64; i += 4) protogen.erase(i);
+    protogen.disp();
     std::cout << "\n";
 }
