@@ -107,7 +107,7 @@ class NeuralNetwork {
         
         for (int layer = 1; layer <= HIDDEN_LAYERS; layer++) {
             for (int i = 0; i < NODES_PER_HIDDEN; i++) {
-                newdata[i] = weights[layer][INPUT_SIZE][i];
+                newdata[i] = weights[layer][NODES_PER_HIDDEN][i];
                 for (int j = 0; j < NODES_PER_HIDDEN; j++) newdata[i] += weights[layer][j][i] * data[j];
                 newdata[i] = activation(newdata[i]);
             }
