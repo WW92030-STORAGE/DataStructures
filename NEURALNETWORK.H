@@ -14,6 +14,7 @@
 #define DEFAULT_LAYERS 1
 #define DEFAULT_HIDDEN 5
 #define INF (100000000)
+#define REFRESH_RATE (1.0 / 60.0)
 
 class NeuralNetwork {
     public:
@@ -27,7 +28,6 @@ class NeuralNetwork {
     
     // The output layer has only one node.
     // The activation function for each layer is a sigmoid.
-	
     
     // How coefficients are encoded? weights[L][a][b] is the scale the data from node a in layer L 
     // is multiplied when inserted into node b in layer L + 1.
@@ -153,7 +153,7 @@ class NeuralNetwork {
         std::string res = "[" + std::to_string(INPUT_SIZE) + " " + std::to_string(HIDDEN_LAYERS) + " " + std::to_string(NODES_PER_HIDDEN) + "]\n";
         
         for (int i = 0; i < weights.size(); i++) {
-            res = res + "\nLAYER " + std::to_string(i) + "\n";
+            res = res + "\nLAYER " + std::to_string(i) + ":\n";
             for (int j = 0; j < weights[i].size(); j++) {
                 for (int k = 0; k < weights[i][j].size(); k++) res = res + "" + std::to_string(weights[i][j][k]) + " ";
                 res = res + "\n";
@@ -161,6 +161,65 @@ class NeuralNetwork {
         }
         
         return res;
+    }
+    
+    private:
+
+    static int find(std::string value, char c, int start = 0) {
+        for (int i = start;i < value.length(); i++) {
+            if (value[i] == c) return i;
+        }
+        return value.length();
+    }
+
+    static std::string substring(std::string data, int a, int b) { // [a, b)
+        return data.substr(a, b - a);
+    }
+    
+    // Generates a neural network based on the toString readout of another.
+    
+    public:
+    
+    static NeuralNetwork readIn(std::string data) {
+        int space = find(data, ' ');
+        int input = std::stoi(substring(data, find(data, '[') + 1, space));
+        int space2 = find(data, ' ', space + 1);
+        int layers = std::stoi(substring(data, space + 1, space2));
+        int hidden = std::stoi(substring(data, space2 + 1, find(data, ']')));
+    
+        NeuralNetwork nn(input, layers, hidden);
+    
+        int start = find(data, ':') + 1;
+        int previouslayer = start;
+        for (int in = 0; in <= input; in++) {
+            for (int out = 0; out < hidden; out++) {
+                int end = find(data, ' ', start);
+                nn.weights[0][in][out] = std::stod(substring(data, start, end));
+                start = end + 1;
+            }
+        }
+    
+        for (int layer = 1; layer <= layers; layer++) {
+            start = find(data, ':', previouslayer) + 1;
+            previouslayer = start;
+            for (int in = 0; in <= hidden; in++) {
+                for (int out = 0; out < hidden; out++) {
+                    int end = find(data, ' ', start);
+                    nn.weights[layer][in][out] = std::stod(substring(data, start, end));
+                    start = end + 1;
+                }
+            }
+        }
+    
+    
+        start = find(data, ':', previouslayer) + 1;
+        for (int in = 0; in <= hidden; in++) {
+            int end = find(data, ' ', start);
+            nn.weights[layers + 1][in][0] = std::stod(substring(data, start, end));
+            start = end + 1;
+        }
+    
+        return nn;
     }
 };
 
