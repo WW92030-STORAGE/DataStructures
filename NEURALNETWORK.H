@@ -28,9 +28,6 @@ class NeuralNetwork {
     // The output layer has only one node.
     // The activation function for each layer is a sigmoid.
     
-    // This network takes in the following inputs:
-    // horizontal distance to nearest obstacle, upwards/downwards vertical distance to nearest obstacle that is above the player (2 inputs), player gravity.
-    
     // How coefficients are encoded? weights[L][a][b] is the scale the data from node a in layer L 
     // is multiplied when inserted into node b in layer L + 1.
     
