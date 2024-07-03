@@ -1,3 +1,6 @@
+#ifndef SEGMENT_TREE_TEMPLATE_H
+#define SEGMENT_TREE_TEMPLATE_H
+
 // SEGMENT TREE HEADER FILE AND TEMPLATE CLASS (C++)
 
 #include <iostream>
@@ -141,3 +144,6 @@ int main()
 }
 
 */
+
+
+#endif
