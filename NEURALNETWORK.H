@@ -10,10 +10,10 @@
 
 // Implementation of a small evolving neural network system
 
-#define DEFAULT_INPUT 4
-#define DEFAULT_LAYERS 16
-#define DEFAULT_HIDDEN 16
-#define INF 100000000;
+#define DEFAULT_INPUT 8
+#define DEFAULT_LAYERS 1
+#define DEFAULT_HIDDEN 5
+#define INF (100000000)
 
 class NeuralNetwork {
     public:
@@ -28,12 +28,20 @@ class NeuralNetwork {
     // The output layer has only one node.
     // The activation function for each layer is a sigmoid.
     
+    // This network takes in the following inputs: horizontal distance to nearest obstacle
+	// upwards/downwards vertical distance to nearest obstacle that is above the player (2 inputs), player gravity
+	// an anticipation of the next 60 ticks if no action is taken and if action is taken constantly and if only action is taken now
+	// interaction with yellow orb
+	
+    
     // How coefficients are encoded? weights[L][a][b] is the scale the data from node a in layer L 
     // is multiplied when inserted into node b in layer L + 1.
     
     int INPUT_SIZE = DEFAULT_INPUT;
     int HIDDEN_LAYERS = DEFAULT_LAYERS;
     int NODES_PER_HIDDEN = DEFAULT_HIDDEN;
+    
+    int edges = 0;
     std::vector<std::vector<std::vector<double>>> weights;
     
     bool operator<(const NeuralNetwork& other) { return weights < other.weights; }
@@ -50,6 +58,13 @@ class NeuralNetwork {
                 for (int k = 0; k < other.weights[i][j].size(); k++) weights[i][j].push_back(other.weights[i][j][k]);
             }
         }
+        
+        edges = 0;
+        for (auto i : weights) {
+            for (auto j : i) {
+                for (auto k : j) edges++;
+            }
+        }
     }
     
     NeuralNetwork() {
@@ -62,6 +77,13 @@ class NeuralNetwork {
             weights.push_back(std::vector<std::vector<double>>(NODES_PER_HIDDEN + 1, std::vector<double>(NODES_PER_HIDDEN, 1)));
         }
         weights.push_back(std::vector<std::vector<double>>(NODES_PER_HIDDEN + 1, std::vector<double>(1, 1)));
+        
+        edges = 0;
+        for (auto i : weights) {
+            for (auto j : i) {
+                for (auto k : j) edges++;
+            }
+        }
     }
     
     NeuralNetwork(int protogen, int primagen, int primogenitor) {
@@ -78,6 +100,13 @@ class NeuralNetwork {
             weights.push_back(std::vector<std::vector<double>>(NODES_PER_HIDDEN + 1, std::vector<double>(NODES_PER_HIDDEN, 1)));
         }
         weights.push_back(std::vector<std::vector<double>>(NODES_PER_HIDDEN + 1, std::vector<double>(1, 1)));
+        
+        edges = 0;
+        for (auto i : weights) {
+            for (auto j : i) {
+                for (auto k : j) edges++;
+            }
+        }
     }
     
     double activation(double x) {
@@ -106,13 +135,13 @@ class NeuralNetwork {
         std::vector<double> newdata(NODES_PER_HIDDEN, 0);
         
         for (int layer = 1; layer <= HIDDEN_LAYERS; layer++) {
-            for (int i = 0; i < NODES_PER_HIDDEN; i++) {
+            for (int i = 0; i < NODES_PER_HIDDEN; i++) { // next node
                 newdata[i] = weights[layer][NODES_PER_HIDDEN][i];
                 for (int j = 0; j < NODES_PER_HIDDEN; j++) newdata[i] += weights[layer][j][i] * data[j];
                 newdata[i] = activation(newdata[i]);
             }
             
-            data = newdata;
+            data = std::vector<double>(newdata);
             // for (auto i : data) std::cout << i << " ";
             // std::cout << "\n";
             newdata = std::vector<double>(NODES_PER_HIDDEN, 0);
@@ -124,53 +153,20 @@ class NeuralNetwork {
         // std::cout << res << std::endl;
         return activation(res);
     }
+    
+    std::string toString() {
+        std::string res = "[" + std::to_string(INPUT_SIZE) + " " + std::to_string(HIDDEN_LAYERS) + " " + std::to_string(NODES_PER_HIDDEN) + "]\n";
+        
+        for (int i = 0; i < weights.size(); i++) {
+            res = res + "\nLAYER " + std::to_string(i) + "\n";
+            for (int j = 0; j < weights[i].size(); j++) {
+                for (int k = 0; k < weights[i][j].size(); k++) res = res + "" + std::to_string(weights[i][j][k]) + " ";
+                res = res + "\n";
+            }
+        }
+        
+        return res;
+    }
 };
-
-
-bool operator<(const NeuralNetwork& nn, const NeuralNetwork& other) { return nn.weights < other.weights; }
-
-namespace Genetic {
-
-double randf() {
-    return (double)(rand()) / (double)(RAND_MAX);
-}
-
-double randrad() {
-    return 2 * (randf() - 0.5);
-}
-
-NeuralNetwork randomAI(double radius = 16, int protogen = DEFAULT_INPUT, int primagen = DEFAULT_LAYERS, int primogenitor = DEFAULT_HIDDEN) {
-    NeuralNetwork nn(protogen, primagen, primogenitor);
-    for (int i = 0; i < nn.weights.size(); i++) {
-        for (int j = 0; j < nn.weights[i].size(); j++) {
-            for (int k = 0; k < nn.weights[i][j].size(); k++) nn.weights[i][j][k] = radius * randrad();
-        }
-    }
-    return nn;
-}
-
-NeuralNetwork cross(NeuralNetwork n1, NeuralNetwork n2) {
-    NeuralNetwork res(n1);
-    for (int i = 0; i < n1.weights.size(); i++) {
-        for (int j = 0; j < n1.weights[i].size(); j++) {
-            for (int k = 0; k < n1.weights[i][j].size(); k++) if (rand() % 2 == 0) res.weights[i][j][k] = n2.weights[i][j][k];
-        }
-    }
-    return res;
-}
-
-NeuralNetwork mutate(NeuralNetwork nn, double radius = 16) {
-    NeuralNetwork res(nn);
-    for (int i = 0; i < nn.weights.size(); i++) {
-        for (int j = 0; j < nn.weights[i].size(); j++) {
-            for (int k = 0; k < nn.weights[i][j].size(); k++) {
-				if (rand() % (nn.HIDDEN_LAYERS * nn.NODES_PER_HIDDEN * 4) == 0) res.weights[i][j][k] = radius * randrad();
-			}
-        }
-    }
-    return res;
-}
-
-}
 
 #endif
