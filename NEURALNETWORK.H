@@ -223,4 +223,56 @@ class NeuralNetwork {
     }
 };
 
+bool operator<(const NeuralNetwork& nn, const NeuralNetwork& other) { return nn.weights < other.weights; }
+
+namespace Genetic {
+
+double randf() {
+    return (double)(rand()) / (double)(RAND_MAX);
+}
+
+double randrad() {
+    return 2 * (randf() - 0.5);
+}
+
+NeuralNetwork randomAI(double radius = 64, int protogen = DEFAULT_INPUT, int primagen = DEFAULT_LAYERS, int primogenitor = DEFAULT_HIDDEN) {
+    NeuralNetwork nn(protogen, primagen, primogenitor);
+    for (int i = 0; i < nn.weights.size(); i++) {
+        for (int j = 0; j < nn.weights[i].size(); j++) {
+            for (int k = 0; k < nn.weights[i][j].size(); k++) nn.weights[i][j][k] = radius * randrad();
+        }
+    }
+    return nn;
+}
+
+NeuralNetwork cross(NeuralNetwork n1, NeuralNetwork n2) {
+    NeuralNetwork res(n1);
+    for (int i = 0; i < n1.weights.size(); i++) {
+        for (int j = 0; j < n1.weights[i].size(); j++) {
+            for (int k = 0; k < n1.weights[i][j].size(); k++) if (rand() % 2 == 0) res.weights[i][j][k] = n2.weights[i][j][k];
+        }
+    }
+    return res;
+}
+
+NeuralNetwork mutate(NeuralNetwork nn, double radius = 64) {
+    int threshold = (int)(nn.edges);
+    
+    NeuralNetwork res(nn);
+    int beep = rand() % threshold;
+    int count = 0;
+    for (int i = 0; i < nn.weights.size(); i++) {
+        for (int j = 0; j < nn.weights[i].size(); j++) {
+            for (int k = 0; k < nn.weights[i][j].size(); k++) {
+                if (rand() % threshold == 0) res.weights[i][j][k] = radius * randrad();
+				if (count == beep) res.weights[i][j][k] = radius * randrad();
+				count++;
+			}
+        }
+    }
+    return res;
+}
+
+}
+
 #endif
