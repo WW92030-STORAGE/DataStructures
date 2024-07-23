@@ -7,12 +7,12 @@
 #include <climits>
 #include <algorithm>
 #include <cmath>
-
+#include <omp.h>
 // Implementation of a small evolving neural network system
 
-#define DEFAULT_INPUT 5
-#define DEFAULT_LAYERS 3
-#define DEFAULT_HIDDEN 3
+#define DEFAULT_INPUT 10
+#define DEFAULT_LAYERS 2
+#define DEFAULT_HIDDEN 5
 #define INF (100000000)
 #define REFRESH_RATE (1.0 / 60.0)
 
@@ -32,6 +32,8 @@ class NeuralNetwork {
     // How coefficients are encoded? weights[L][a][b] is the scale the data from node a in layer L 
     // is multiplied when inserted into node b in layer L + 1.
     
+    // This implementation has 2 activation functions: one for the output layer and one for everything else.
+    
     int INPUT_SIZE = DEFAULT_INPUT;
     int HIDDEN_LAYERS = DEFAULT_LAYERS;
     int NODES_PER_HIDDEN = DEFAULT_HIDDEN;
@@ -42,19 +44,7 @@ class NeuralNetwork {
     
     bool operator<(const NeuralNetwork& other) { return weights < other.weights; }
     
-    NeuralNetwork(const NeuralNetwork& other) {
-        INPUT_SIZE = other.INPUT_SIZE;
-        HIDDEN_LAYERS = other.HIDDEN_LAYERS;
-        NODES_PER_HIDDEN = other.NODES_PER_HIDDEN;
-        weights = std::vector<std::vector<std::vector<double>>>();
-        for (int i = 0; i < other.weights.size(); i++) {
-            weights.push_back(std::vector<std::vector<double>>());
-            for (int j = 0; j < other.weights[i].size(); j++) {
-                weights[i].push_back(std::vector<double>());
-                for (int k = 0; k < other.weights[i][j].size(); k++) weights[i][j].push_back(other.weights[i][j][k]);
-            }
-        }
-        
+    void init() {
         edges = 0;
         for (auto i : weights) {
             for (auto j : i) {
@@ -70,6 +60,22 @@ class NeuralNetwork {
         for (int i = 0; i <= HIDDEN_LAYERS; i++) values[i][values[i].size() - 1] = 1;
     }
     
+    NeuralNetwork(const NeuralNetwork& other) {
+        INPUT_SIZE = other.INPUT_SIZE;
+        HIDDEN_LAYERS = other.HIDDEN_LAYERS;
+        NODES_PER_HIDDEN = other.NODES_PER_HIDDEN;
+        weights = std::vector<std::vector<std::vector<double>>>();
+        for (int i = 0; i < other.weights.size(); i++) {
+            weights.push_back(std::vector<std::vector<double>>());
+            for (int j = 0; j < other.weights[i].size(); j++) {
+                weights[i].push_back(std::vector<double>());
+                for (int k = 0; k < other.weights[i][j].size(); k++) weights[i][j].push_back(other.weights[i][j][k]);
+            }
+        }
+        
+        init();
+    }
+    
     NeuralNetwork() {
         if (HIDDEN_LAYERS == 0) {
             weights.push_back(std::vector<std::vector<double>>(INPUT_SIZE + 1, std::vector<double>(1, 1)));
@@ -81,19 +87,7 @@ class NeuralNetwork {
         }
         weights.push_back(std::vector<std::vector<double>>(NODES_PER_HIDDEN + 1, std::vector<double>(1, 1)));
         
-        edges = 0;
-        for (auto i : weights) {
-            for (auto j : i) {
-                for (auto k : j) edges++;
-            }
-        }
-        
-        values = std::vector<std::vector<double>>();
-        values.push_back(std::vector<double>(INPUT_SIZE + 1, 0));
-        for (int i = 0; i < HIDDEN_LAYERS; i++) values.push_back(std::vector<double>(NODES_PER_HIDDEN + 1, 0));
-        values.push_back(std::vector<double>(1, 0));
-        
-        for (int i = 0; i <= HIDDEN_LAYERS; i++) values[i][values[i].size() - 1] = 1;
+        init();
     }
     
     NeuralNetwork(int protogen, int primagen, int primogenitor) {
@@ -111,31 +105,34 @@ class NeuralNetwork {
         }
         weights.push_back(std::vector<std::vector<double>>(NODES_PER_HIDDEN + 1, std::vector<double>(1, 1)));
         
-        edges = 0;
-        for (auto i : weights) {
-            for (auto j : i) {
-                for (auto k : j) edges++;
-            }
-        }
-        
-        values = std::vector<std::vector<double>>();
-        values.push_back(std::vector<double>(INPUT_SIZE + 1, 0));
-        for (int i = 0; i < HIDDEN_LAYERS; i++) values.push_back(std::vector<double>(NODES_PER_HIDDEN + 1, 0));
-        values.push_back(std::vector<double>(1, 0));
-        
-        for (int i = 0; i <= HIDDEN_LAYERS; i++) values[i][values[i].size() - 1] = 1;
+        init();
+    }
+    
+    double sigmoid(double x) {
+        double num = 1;
+        double den = 1 + exp(-1 * x);
+        return (num / den) - 0.5;
     }
     
     double activation(double x) {
         return x;
-        double res = 1 + exp(-1 * x);
-        return (1.0 / res) - 0.5;
+        return sigmoid(x);
     }
     
     
     double activd(double y) {
         return 1;
         return y * (1 - y);
+    }
+    
+    double finalactivation(double x) {
+        return sigmoid(x);
+        return x;
+    }
+    
+    double finalad(double y) {
+        return y * (1 - y);
+        return 1;
     }
     
     double eval(std::vector<double> input) {
@@ -180,8 +177,8 @@ class NeuralNetwork {
         res += weights[HIDDEN_LAYERS][NODES_PER_HIDDEN][0];
         // std::cout << res << std::endl;
         
-        values[HIDDEN_LAYERS + 1][0] = activation(res); // store the final value for consistency
-        return activation(res);
+        values[HIDDEN_LAYERS + 1][0] = finalactivation(res); // store the final value for consistency
+        return finalactivation(res);
     }
     
     std::string toString() {
@@ -200,6 +197,8 @@ class NeuralNetwork {
     
     void backprop(double yhat, double y, double alpha, bool verbose = false) {
         if (verbose) {
+            std::cout << "NN\n";
+            std::cout << toString() << "\n";
             std::cout << "NN VALUES\n";
             for (auto i : values) {
                 for (auto j : i) std::cout << j << " ";
@@ -208,7 +207,7 @@ class NeuralNetwork {
         }
         
         
-        double Eprime = yhat - y; // d(Squared error) / d(yhat) = dE / dY'
+        double Eprime = y - yhat; // d(Squared error) / d(yhat) = dE / dY'
         
         // denote N as the input value to a node (weighted sum) and N' the corresponding output (activation(N))
         
@@ -229,18 +228,16 @@ class NeuralNetwork {
         
         NeuralNetwork gradients(*this); // weight gradients. 
         // gradients.weights[l][i][j] is the gradient of the edge starting on node i on layer l leading into node j on layer l + 1
-        for (int i = 0; i <= NODES_PER_HIDDEN; i++) {
-            gradients.weights[HIDDEN_LAYERS][i][0] = Eprime * activd(yhat) * values[HIDDEN_LAYERS][i];
-        }
         
-        // For the output layer it simply has d(sqerror) / d(output') = (output' - actual')
+        // For the output layer it simply has d(sqerror) / d(output')
         nodegrads[HIDDEN_LAYERS + 1][0] = Eprime;
         // Now for successive layers:
-        for (int i = HIDDEN_LAYERS; i > 0; i--) {
-            for (int k = 0; k < NODES_PER_HIDDEN + 1; k++) { // node k on layer i
+        for (int i = HIDDEN_LAYERS; i >= 0; i--) {
+            for (int k = 0; k < values[i].size(); k++) { // node k on layer i
                 double sum = 0;
                 for (int j = 0; j < nodegrads[i + 1].size(); j++) {
-                    sum += nodegrads[i + 1][j] * activd(values[i + 1][j]) * weights[i][k][j];
+                    if (i == HIDDEN_LAYERS) sum += nodegrads[i + 1][j] * finalad(values[i + 1][j]) * weights[i][k][j];
+                    else sum += nodegrads[i + 1][j] * activd(values[i + 1][j]) * weights[i][k][j];
                 }
                 nodegrads[i][k] = sum;
             }
@@ -260,7 +257,8 @@ class NeuralNetwork {
             for (int j = 0; j < weights[i].size(); j++) {
                 for (int k = 0; k < weights[i][j].size(); k++) {
                     // d(sqerror) / d(weight[i][j][k]) = d(sqerror) / d(v'[i + 1][k]) * d(v'[i + 1][k]) / d(v[i + 1][k]) * d(v[i + 1][k]) / d(w)
-                    gradients.weights[i][j][k] = nodegrads[i + 1][k] * activd(values[i + 1][k]) * values[i][j];
+                    if (i == HIDDEN_LAYERS) gradients.weights[i][j][k] = nodegrads[i + 1][k] * finalad(values[i + 1][k]) * values[i][j];
+                    else gradients.weights[i][j][k] = nodegrads[i + 1][k] * activd(values[i + 1][k]) * values[i][j];
                 }
             }
         }
@@ -269,7 +267,9 @@ class NeuralNetwork {
         
         for (int i = 0; i < weights.size(); i++) {
             for (int j = 0; j < weights[i].size(); j++) {
-                for (int k = 0; k < weights[i][j].size(); k++) weights[i][j][k] -= gradients.weights[i][j][k] * alpha;
+                for (int k = 0; k < weights[i][j].size(); k++) {
+                    weights[i][j][k] -= gradients.weights[i][j][k] * alpha;
+                }
             }
         }
     }
