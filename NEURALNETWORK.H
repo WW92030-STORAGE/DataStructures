@@ -7,13 +7,12 @@
 #include <climits>
 #include <algorithm>
 #include <cmath>
-#include <string>
 
 // Implementation of a small evolving neural network system
 
-#define DEFAULT_INPUT 8
-#define DEFAULT_LAYERS 4
-#define DEFAULT_HIDDEN 4
+#define DEFAULT_INPUT 5
+#define DEFAULT_LAYERS 3
+#define DEFAULT_HIDDEN 3
 #define INF (100000000)
 #define REFRESH_RATE (1.0 / 60.0)
 
@@ -66,6 +65,9 @@ class NeuralNetwork {
         values = std::vector<std::vector<double>>();
         values.push_back(std::vector<double>(INPUT_SIZE + 1, 1));
         for (int i = 0; i < HIDDEN_LAYERS; i++) values.push_back(std::vector<double>(NODES_PER_HIDDEN + 1, 1));
+        values.push_back(std::vector<double>(1, 0));
+        
+        for (int i = 0; i <= HIDDEN_LAYERS; i++) values[i][values[i].size() - 1] = 1;
     }
     
     NeuralNetwork() {
@@ -87,8 +89,11 @@ class NeuralNetwork {
         }
         
         values = std::vector<std::vector<double>>();
-        values.push_back(std::vector<double>(INPUT_SIZE, 0));
+        values.push_back(std::vector<double>(INPUT_SIZE + 1, 0));
         for (int i = 0; i < HIDDEN_LAYERS; i++) values.push_back(std::vector<double>(NODES_PER_HIDDEN + 1, 0));
+        values.push_back(std::vector<double>(1, 0));
+        
+        for (int i = 0; i <= HIDDEN_LAYERS; i++) values[i][values[i].size() - 1] = 1;
     }
     
     NeuralNetwork(int protogen, int primagen, int primogenitor) {
@@ -114,8 +119,11 @@ class NeuralNetwork {
         }
         
         values = std::vector<std::vector<double>>();
-        values.push_back(std::vector<double>(INPUT_SIZE, 0));
-        for (int i = 0; i < HIDDEN_LAYERS; i++) values.push_back(std::vector<double>(NODES_PER_HIDDEN, 0));
+        values.push_back(std::vector<double>(INPUT_SIZE + 1, 0));
+        for (int i = 0; i < HIDDEN_LAYERS; i++) values.push_back(std::vector<double>(NODES_PER_HIDDEN + 1, 0));
+        values.push_back(std::vector<double>(1, 0));
+        
+        for (int i = 0; i <= HIDDEN_LAYERS; i++) values[i][values[i].size() - 1] = 1;
     }
     
     double activation(double x) {
@@ -171,6 +179,8 @@ class NeuralNetwork {
         for (int i = 0; i < NODES_PER_HIDDEN; i++) res += data[i] * weights[HIDDEN_LAYERS][i][0];
         res += weights[HIDDEN_LAYERS][NODES_PER_HIDDEN][0];
         // std::cout << res << std::endl;
+        
+        values[HIDDEN_LAYERS + 1][0] = activation(res); // store the final value for consistency
         return activation(res);
     }
     
@@ -189,83 +199,79 @@ class NeuralNetwork {
     }
     
     void backprop(double yhat, double y, double alpha, bool verbose = false) {
+        if (verbose) {
+            std::cout << "NN VALUES\n";
+            for (auto i : values) {
+                for (auto j : i) std::cout << j << " ";
+                std::cout << "\n";
+            }
+        }
+        
+        
         double Eprime = yhat - y; // d(Squared error) / d(yhat) = dE / dY'
-        // For the output layer:
-        // Y' = activation(Y) = activation(weighted sum)
-        // Y = w1 N1 + w2 N2 + ... + wn (final N values is one)
-        // Chain rule: dE / dw = dE / dY' * dY' / dY * dY / dw = Eprime * (sigmoid deriv) * N
-        // but we also need dE / dN = dE / dY' * dY' / dY * dY / dN = Eprime * (sigmoid deriv) * weight
         
-        double deriv = activd(yhat);
+        // denote N as the input value to a node (weighted sum) and N' the corresponding output (activation(N))
         
-        if (verbose) std::cout << "BEGIN " << Eprime << " " << deriv << "\n";
+        // If a node N outputs to some outputs [x1 ... xk] and inputs from some inputs [z1 ... zj]
+        // then the gradient d(squared error) / dN' is simply the sum of the following:
+        // d(squared error) / d(z') * dz' / dz * dz / dN' over all z in [z1 ... zj]
+        // You can get the values of N' from the values vector which stores all input and intermediate values
         
-        NeuralNetwork gradients(*this); // This stores the gradients
+        // The neural network has N + 2 layers. 1 input layer, N hidden layers, and 1 output layer.
+        // There are N + 1 layers of weights. Layer i (weights[i]) forms a matrix of weights from Layer i to Layer i + 1
+        // weights[i][j][k] is the weight connecting node j in layer i to node k in layer i + 1
+        
+        std::vector<std::vector<double>> nodegrads(1, std::vector<double>(INPUT_SIZE + 1, 0)); // Gradients d(squared error) / dN'
+        for (int i = 0; i < HIDDEN_LAYERS; i++) nodegrads.push_back(std::vector<double>(NODES_PER_HIDDEN + 1, 0));
+        nodegrads.push_back(std::vector<double>(1, 0));
+        
+        // nodegrads[i][j] is d(squared error) / d(value' of node j in layer i so after the sigmoid)
+        
+        NeuralNetwork gradients(*this); // weight gradients. 
         // gradients.weights[l][i][j] is the gradient of the edge starting on node i on layer l leading into node j on layer l + 1
-        for (int i = 0; i < NODES_PER_HIDDEN; i++) {
+        for (int i = 0; i <= NODES_PER_HIDDEN; i++) {
             gradients.weights[HIDDEN_LAYERS][i][0] = Eprime * activd(yhat) * values[HIDDEN_LAYERS][i];
-            gradients.values[HIDDEN_LAYERS][i] = Eprime * activd(yhat) * weights[HIDDEN_LAYERS][i][0] * activd(values[HIDDEN_LAYERS][i]); // This is the gradient of the error with resepct to teh output of the last layer nodes
         }
         
-        
-        if (verbose) std::cout << "LAST LAYER\n";
-        
-        // For the next layers we do a bit more complicated
-        // Suppose we wanted to change the weight w[l][i][j] which transitions from node i in layer l into node j in layer (l + 1)
-        // v[l + 1][j] = weighted sum including the term w[l][i][j] * v[l][i]
-        // so d(v[l + 1][j]) / d(w[l][i][j]) = v[l][i]
-        // Of course we must also use the chain rule: d(v'[l + 1][j]) / d(v[l + 1][j]) = v'[l + 1][j] * (1 - v'[l + 1][j])
-        // And dv(j) / dv'(i) = w[?][i][j].
-        // If we generalize the error function we obtain (let the total number of hidden layers be L):
-        // dE / dw[l][i][j] = dE / dY * dY / dv'[L][i_L] * dv'[L][i_L] / dv[L][i_L] * dv[L][i_L] / dv'[L - 1][i_(L - 1)] ... * dv[l + 1][j] / dw[l][i][j]
-        // gradient =.      = (2 steps)* w[L][i_L][0] * sigmoid deriv           * w[L][i_(L - 1])][i_L] * sigmoid deriv ... * v[l][i]
-        
-        // But what if we have multiple outputs for a single node? e.g. it has multiple edges from it. We use a total derivative.
-        // Suppose f(a, b, c) where a, b, c are functions in x. Then df/dx = df/da da/dx + df/db db/dx + df/dc dc/dx.
-        // We will also need to store the values of the gradients with respect to the node outputs dE / dv'[l][i]
-        
-        // So if our node v[l][i] with activated value v'[l][i] outputs to the next layer v[l + 1][j1 ... jn] 
-        // using the weights w[l][i][j1, j2 ... jn] then dE / dv'[l][i] = sum dE / dv[l + 1][j] * dv[l + 1][j] / dv'[l][i]
-        
-        // gradients.weights[l][i][j] is dE / dw[l][i][j] and gradients.values[l][i] is dE / dv[l][i]
-        
-        for (int l = HIDDEN_LAYERS - 1; l >= 0; l--) { // layer l
-            for (int i = NODES_PER_HIDDEN; i >= 0; i--) { // node i (including the bias node)
-                double outderiv = 0;
-                for (int j = 0; j < NODES_PER_HIDDEN; j++) outderiv += gradients.values[l + 1][j] * weights[l][i][j];
-                if (verbose) std::cout << outderiv << " " << values[l][i] << " | ";
-                gradients.values[l][i] = outderiv * activd(values[l][i]); // scale by dv' / dv
+        // For the output layer it simply has d(sqerror) / d(output') = (output' - actual')
+        nodegrads[HIDDEN_LAYERS + 1][0] = Eprime;
+        // Now for successive layers:
+        for (int i = HIDDEN_LAYERS; i > 0; i--) {
+            for (int k = 0; k < NODES_PER_HIDDEN + 1; k++) { // node k on layer i
+                double sum = 0;
+                for (int j = 0; j < nodegrads[i + 1].size(); j++) {
+                    sum += nodegrads[i + 1][j] * activd(values[i + 1][j]) * weights[i][k][j];
+                }
+                nodegrads[i][k] = sum;
             }
         }
         
-        if (verbose) std::cout << "GRADIENT NODE VALUES\n";
-        
-        // Now to gradient the edges. For any edge w[l][i][j] leading into node v[l + 1][j] its gradient is
-        // dE / dw[l][i][j] = dE / dv[l + 1][j] * dv[l + 1][j] / dw[l][i][j] = gradient.values[l + 1][j] * values[l][i]
-        
-        for (int l = HIDDEN_LAYERS - 1; l > 0; l--) {
-            for (int i = 0; i <= NODES_PER_HIDDEN; i++) {
-                for (int j = 0; j < NODES_PER_HIDDEN; j++) gradients.weights[l][i][j] = gradients.values[l + 1][j] * values[l][i];
+        if (verbose) {
+            std::cout << "NODE GRADIENTS\n";
+            for (auto i : nodegrads) {
+                for (auto j : i) std::cout << j << " ";
+                std::cout << "\n";
             }
         }
         
-        for (int i = 0; i <= INPUT_SIZE; i++) {
-            for (int j = 0; j < NODES_PER_HIDDEN; j++) gradients.weights[0][i][j] = gradients.values[1][j] * values[0][i];
-        }
+        // Now to look at the weights
         
-        if (verbose) std::cout << "GRADIENT EDGE VALUES\n";
-        
-        // Now subtract the gradient using the learning rate
-        
-        for (int l = 0; l < weights.size(); l++) {
-            for (int i = 0; i < weights[l].size(); i++) {
-                for (int j = 0; j < weights[l][i].size(); j++) weights[l][i][j] -= alpha * gradients.weights[l][i][j];
+        for (int i = HIDDEN_LAYERS; i >= 0; i--) { // layer i --> layer (i + 1)
+            for (int j = 0; j < weights[i].size(); j++) {
+                for (int k = 0; k < weights[i][j].size(); k++) {
+                    // d(sqerror) / d(weight[i][j][k]) = d(sqerror) / d(v'[i + 1][k]) * d(v'[i + 1][k]) / d(v[i + 1][k]) * d(v[i + 1][k]) / d(w)
+                    gradients.weights[i][j][k] = nodegrads[i + 1][k] * activd(values[i + 1][k]) * values[i][j];
+                }
             }
         }
         
-        if (verbose) std::cout << gradients.toString() << "\n";
+        if (verbose) std::cout << "GRADIENTS " << "\n" << gradients.toString() << "\n";
         
-        if (verbose) std::cout << "DONE\n";
+        for (int i = 0; i < weights.size(); i++) {
+            for (int j = 0; j < weights[i].size(); j++) {
+                for (int k = 0; k < weights[i][j].size(); k++) weights[i][j][k] -= gradients.weights[i][j][k] * alpha;
+            }
+        }
     }
     
     private:
@@ -320,7 +326,7 @@ class NeuralNetwork {
         start = find(data, ':', previouslayer) + 1;
         for (int in = 0; in <= hidden; in++) {
             int end = find(data, ' ', start);
-            nn.weights[layers][in][0] = std::stod(substring(data, start, end));
+            nn.weights[layers + 1][in][0] = std::stod(substring(data, start, end));
             start = end + 1;
         }
     
