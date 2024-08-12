@@ -10,9 +10,9 @@
 #include <omp.h>
 // Implementation of a small evolving neural network system
 
-#define DEFAULT_INPUT 10
-#define DEFAULT_LAYERS 2
-#define DEFAULT_HIDDEN 5
+#define DEFAULT_INPUT 2
+#define DEFAULT_LAYERS 1
+#define DEFAULT_HIDDEN 2
 #define INF (100000000)
 #define REFRESH_RATE (1.0 / 60.0)
 
@@ -37,6 +37,8 @@ class NeuralNetwork {
     int INPUT_SIZE = DEFAULT_INPUT;
     int HIDDEN_LAYERS = DEFAULT_LAYERS;
     int NODES_PER_HIDDEN = DEFAULT_HIDDEN;
+    
+    double WEIGHTLIMIT = (1<<16);
     
     int edges = 0;
     std::vector<std::vector<std::vector<double>>> weights;
@@ -109,20 +111,22 @@ class NeuralNetwork {
     }
     
     double sigmoid(double x) {
-        double num = 1;
-        double den = 1 + exp(-1 * x);
-        return (num / den) - 0.5;
+        return std::tanh(x);
+    }
+    
+    double sigd(double y) {
+        return 1 - y * y;
     }
     
     double activation(double x) {
-        return x;
+        // return x;
         return sigmoid(x);
     }
     
     
     double activd(double y) {
-        return 1;
-        return y * (1 - y);
+        // return 1;
+        return sigd(y);
     }
     
     double finalactivation(double x) {
@@ -131,7 +135,7 @@ class NeuralNetwork {
     }
     
     double finalad(double y) {
-        return y * (1 - y);
+        return sigd(y);
         return 1;
     }
     
@@ -144,6 +148,8 @@ class NeuralNetwork {
             return activation(res);
         }
         std::vector<double> data(NODES_PER_HIDDEN, 0);
+        
+        values[0][INPUT_SIZE] = 1;
         
         for (int i = 0; i < INPUT_SIZE; i++) values[0][i] = input[i];
         for (int i = 0; i < NODES_PER_HIDDEN; i++) {
@@ -207,7 +213,7 @@ class NeuralNetwork {
         }
         
         
-        double Eprime = y - yhat; // d(Squared error) / d(yhat) = dE / dY'
+        double Eprime = yhat - y; // d(Squared error) / d(yhat) = dE / dY'
         
         // denote N as the input value to a node (weighted sum) and N' the corresponding output (activation(N))
         
@@ -269,6 +275,8 @@ class NeuralNetwork {
             for (int j = 0; j < weights[i].size(); j++) {
                 for (int k = 0; k < weights[i][j].size(); k++) {
                     weights[i][j][k] -= gradients.weights[i][j][k] * alpha;
+                    if (weights[i][j][k] < -1 * WEIGHTLIMIT) weights[i][j][k] = -1 * WEIGHTLIMIT;
+                    if (weights[i][j][k] > WEIGHTLIMIT) weights[i][j][k] = WEIGHTLIMIT;
                 }
             }
         }
@@ -326,7 +334,7 @@ class NeuralNetwork {
         start = find(data, ':', previouslayer) + 1;
         for (int in = 0; in <= hidden; in++) {
             int end = find(data, ' ', start);
-            nn.weights[layers + 1][in][0] = std::stod(substring(data, start, end));
+            nn.weights[layers][in][0] = std::stod(substring(data, start, end));
             start = end + 1;
         }
     
