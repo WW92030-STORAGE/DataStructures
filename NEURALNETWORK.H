@@ -219,7 +219,7 @@ class NeuralNetwork {
         
         // If a node N outputs to some outputs [x1 ... xk] and inputs from some inputs [z1 ... zj]
         // then the gradient d(squared error) / dN' is simply the sum of the following:
-        // d(squared error) / d(z') * dz' / dz * dz / dN' over all z in [z1 ... zj]
+        // d(squared error) / d(x') * dx' / dx * dx / dN' over all x in [x1 ... xk]
         // You can get the values of N' from the values vector which stores all input and intermediate values
         
         // The neural network has N + 2 layers. 1 input layer, N hidden layers, and 1 output layer.
