@@ -6,8 +6,6 @@ struct DSU {
 
 
 impl DSU {
-    // Use &self or &mut self as a parameter for referencing, and then self as the victim.
-    
     fn init(&mut self, n: usize) {
         self.N = n;
         self.parent = vec![0; self.N];
@@ -17,7 +15,6 @@ impl DSU {
         }
     }
     
-    // Func parameters can also be mutable!
     fn find(&self, mut val: usize) -> usize {
         while (self.parent[val] != val) {
             val = self.parent[val];
