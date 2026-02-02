@@ -30,7 +30,7 @@ class LRUCache {
     int capacity;
     int size;
     
-    std::map<K, Node<K, V>*> hashMap; // can replace with unordered_map if your types are hashable
+    std::map<K, Node<K, V>*> theMap; // can replace with unordered_map if your types are hashable
     
     Node<K, V>* head = new Node<K, V>();
     Node<K, V>* tail = new Node<K, V>();
@@ -65,7 +65,7 @@ class LRUCache {
     }
     
     Node<K, V>* search(K k) {
-        if (hashMap.find(k) != hashMap.end()) return hashMap.at(k);
+        if (theMap.find(k) != theMap.end()) return theMap.at(k);
         Node<K, V>* n = head->next;
         while (n != tail) {
             if (n->key == k) return n;
@@ -80,19 +80,19 @@ class LRUCache {
         node->prev = prevEnd;
         node->next = tail;
         tail->prev = node;
-        hashMap.insert({node->key, node});
+        theMap.insert({node->key, node});
         size++;
     }
     
     void remove(Node<K, V>* node) {
         node->prev->next = node->next;
         node->next->prev = node->prev;
-        hashMap.erase(hashMap.find(node->key));
+        theMap.erase(theMap.find(node->key));
         size--;
     }
 };
 
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
 
 int main() // Leetcode sample testcase
